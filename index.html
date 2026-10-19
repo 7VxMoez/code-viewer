@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Viewer · Powered by Abdul Moez</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ================================================================
+           RESET & VARIABLES (Horror Theme - Blood & Black)
+           ================================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blood: #8b0000;
+            --blood-bright: #dc2626;
+            --blood-dark: #4a0000;
+            --ghost: rgba(255, 255, 255, 0.85);
+            --bg: #050005;
+            --bg-surface: #0a0008;
+            --bg-elevated: #110008;
+            --border-blood: #3a0000;
+            --text-primary: #e8d5d5;
+            --text-secondary: #a08080;
+            --text-muted: #5a3a3a;
+            --font-display: 'Georgia', 'Palatino Linotype', serif;
+            --font-body: 'Georgia', 'Palatino Linotype', serif;
+            --font-mono: 'Courier New', monospace;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            font-family: var(--font-body);
+            position: relative;
+        }
+
+        ::selection { background: #7f1d1d; color: #fff; }
+
+        /* ================================================================
+           HORROR BACKGROUND
+           ================================================================ */
+        .horror-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .horror-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 50% 60%, rgba(80, 0, 0, 0.25) 0%, transparent 70%),
+                radial-gradient(ellipse 80% 30% at 30% 100%, rgba(0, 0, 0, 0.8) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 30% at 70% 20%, rgba(60, 0, 0, 0.2) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .horror-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                transparent 10%, var(--blood) 20%, var(--blood-bright) 30%,
+                transparent 40%, var(--blood) 55%, var(--blood-bright) 70%,
+                transparent 80%);
+            box-shadow: 0 0 12px var(--blood), 0 0 30px rgba(139, 0, 0, 0.5);
+        }
+
+        .fog-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(150px);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+        .fog-orb.red { width: 600px; height: 600px; background: var(--blood); top: -200px; right: -150px; }
+        .fog-orb.dark { width: 700px; height: 700px; background: #1a0000; bottom: -300px; left: -200px; }
+
+        .horror-bg .grain {
+            position: absolute; inset: 0; opacity: 0.25;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+
+        /* ================================================================
+           TWITCH ANIMATION
+           ================================================================ */
+        .twitch-text {
+            display: inline-block;
+            font-weight: 700;
+            color: var(--ghost);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow:
+                -2px 0 rgba(180, 0, 0, 0.45),
+                2px 0 rgba(100, 0, 0, 0.45),
+                0 0 24px rgba(139, 0, 0, 0.5);
+            animation: twitch 3s steps(1) infinite;
+            font-family: var(--font-display);
+        }
+
+        @keyframes twitch {
+            0% { text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5); transform: translate(0,0); }
+            12% { text-shadow: -6px 0 var(--blood-bright), 6px 0 rgba(255,100,100,0.7), 0 2px 24px var(--blood); transform: translate(-5px,2px); }
+            16% { text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5); transform: translate(0,0); }
+            27% { text-shadow: 10px -4px var(--blood), -10px 4px rgba(255,0,0,0.5), 0 0 48px rgba(139,0,0,0.85); transform: translate(7px,-4px); }
+            30%,34%,60%,84%,100% { text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5); transform: translate(0,0); }
+            32% { text-shadow: 5px 0 rgba(255,100,100,0.9), -5px 0 var(--blood); transform: translate(3px,0); }
+            55% { text-shadow: -16px 6px var(--blood-bright), 16px -6px rgba(180,0,0,0.85), 0 0 72px rgba(139,0,0,0.65); transform: translate(-9px,5px); }
+            58% { text-shadow: 9px -3px rgba(255,50,50,0.75); transform: translate(5px,-3px); }
+            78% { text-shadow: -5px 10px var(--blood), 5px -10px rgba(255,200,200,0.4); transform: translate(-3px,7px); }
+            81% { text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5); transform: translate(0,0); }
+            93% { text-shadow: -22px 0 var(--blood-bright), 22px 0 rgba(100,0,0,1), 0 0 90px rgba(139,0,0,0.75); transform: translate(-12px,0); }
+            96% { text-shadow: 12px 8px var(--blood); transform: translate(7px,5px); }
+        }
+
+        /* ================================================================
+           SCROLL REVEAL
+           ================================================================ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.08s; }
+        .reveal-delay-2 { transition-delay: 0.16s; }
+        .reveal-delay-3 { transition-delay: 0.24s; }
+        .reveal-delay-4 { transition-delay: 0.32s; }
+
+        /* ================================================================
+           WRAPPER
+           ================================================================ */
+        .wrapper {
+            max-width: 1600px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ================================================================
+           HEADER
+           ================================================================ */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-blood);
+            padding-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--blood), transparent);
+            box-shadow: 0 0 15px var(--blood);
+        }
+
+        .logo h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--ghost);
+            text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5);
+            display: inline-block;
+            font-family: var(--font-display);
+        }
+
+        .logo span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-left: 10px;
+            letter-spacing: 3px;
+            background: var(--bg-surface);
+            padding: 4px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border-blood);
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .powered {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            background: rgba(10, 0, 8, 0.8);
+            padding: 0.55rem 1.3rem;
+            border-radius: 100px;
+            border: 1px solid var(--border-blood);
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+
+        .powered i {
+            color: var(--blood-bright);
+            font-size: 0.95rem;
+            text-shadow: 0 0 12px var(--blood);
+            animation: flicker 4s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%,90%,100% { opacity: 1; }
+            92% { opacity: 0.3; }
+            94% { opacity: 1; }
+            96% { opacity: 0.5; }
+            98% { opacity: 1; }
+        }
+
+        .powered .powered-text { color: var(--ghost); font-weight: 500; letter-spacing: 1px; }
+
+        .nav-btn {
+            background: rgba(10, 0, 8, 0.8);
+            border: 1px solid var(--border-blood);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: var(--font-display);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(30, 0, 15, 0.95);
+            border-color: var(--blood-bright);
+            color: var(--blood-bright);
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.4);
+            text-shadow: 0 0 10px var(--blood-bright);
+        }
+
+        /* ================================================================
+           PAGE HERO
+           ================================================================ */
+        .page-hero {
+            text-align: center;
+            padding: 20px 20px 40px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .page-hero .eyebrow {
+            font-size: 10px;
+            letter-spacing: 6px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: block;
+            font-family: var(--font-display);
+        }
+
+        .page-hero h2 {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--ghost);
+            text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 30px rgba(139,0,0,0.6);
+            margin-bottom: 16px;
+            font-family: var(--font-display);
+        }
+
+        .page-hero p {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            letter-spacing: 1.5px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .page-hero .free-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 8px 20px;
+            background: rgba(139, 0, 0, 0.15);
+            border: 1px solid var(--blood);
+            border-radius: 60px;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--blood-bright);
+            font-family: var(--font-display);
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+
+        .page-hero .free-badge i { animation: flicker 3s infinite alternate; }
+
+        /* ================================================================
+           TOOLBAR
+           ================================================================ */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1.2rem;
+            padding: 1rem 1.2rem;
+            background: rgba(10, 0, 8, 0.6);
+            border: 1px solid var(--border-blood);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            align-items: center;
+        }
+
+        .toolbar .toolbar-label {
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            margin-right: 4px;
+        }
+
+        .btn-tool {
+            background: rgba(15, 0, 10, 0.8);
+            border: 1px solid var(--border-blood);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.55rem 1.1rem;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: 0.25s;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-family: var(--font-display);
+        }
+
+        .btn-tool i { font-size: 0.75rem; color: var(--blood); }
+        .btn-tool:hover {
+            background: rgba(30, 0, 15, 0.95);
+            border-color: var(--blood-bright);
+            color: var(--blood-bright);
+            box-shadow: 0 0 25px rgba(139, 0, 0, 0.35);
+        }
+        .btn-tool:hover i { color: var(--blood-bright); }
+        .btn-tool.run { border-color: var(--blood); color: var(--blood-bright); }
+        .btn-tool.run i { color: var(--blood-bright); }
+
+        /* ================================================================
+           EDITOR LAYOUT
+           ================================================================ */
+        .editor-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+            min-height: 60vh;
+        }
+
+        @media (max-width: 1000px) {
+            .editor-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ================================================================
+           EDITOR PANEL (Left side - tabs)
+           ================================================================ */
+        .editor-panel {
+            background: rgba(10, 0, 8, 0.8);
+            border: 1px solid var(--border-blood);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(139, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .editor-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blood), transparent);
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .editor-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-blood);
+            background: rgba(5, 0, 5, 0.6);
+            flex-wrap: wrap;
+        }
+
+        .editor-tab {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-right: 1px solid var(--border-blood);
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            font-family: var(--font-display);
+            position: relative;
+            min-width: 80px;
+        }
+
+        .editor-tab:last-child { border-right: none; }
+        .editor-tab i { font-size: 0.85rem; }
+        .editor-tab:hover { color: var(--text-secondary); background: rgba(30, 0, 15, 0.3); }
+        .editor-tab.active {
+            color: var(--blood-bright);
+            background: rgba(30, 0, 15, 0.5);
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.4);
+        }
+        .editor-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0;
+            height: 2px;
+            background: var(--blood-bright);
+            box-shadow: 0 0 10px var(--blood);
+        }
+
+        .editor-body {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 300px;
+            background: rgba(5, 0, 5, 0.9);
+            border: none;
+            padding: 16px 18px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            resize: none;
+            outline: none;
+            tab-size: 2;
+            caret-color: var(--blood-bright);
+        }
+
+        .editor-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+
+        .editor-textarea::-webkit-scrollbar { width: 8px; height: 8px; }
+        .editor-textarea::-webkit-scrollbar-track { background: rgba(5,0,5,0.5); }
+        .editor-textarea::-webkit-scrollbar-thumb { background: var(--border-blood); border-radius: 20px; }
+        .editor-textarea::-webkit-scrollbar-thumb:hover { background: var(--blood); }
+
+        /* ================================================================
+           PREVIEW PANEL (Right side)
+           ================================================================ */
+        .preview-panel {
+            background: rgba(10, 0, 8, 0.8);
+            border: 1px solid var(--border-blood);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(139, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .preview-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blood), transparent);
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-blood);
+            background: rgba(5, 0, 5, 0.6);
+            flex-shrink: 0;
+        }
+
+        .preview-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-family: var(--font-display);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preview-title i { color: var(--blood); }
+
+        .preview-actions { display: flex; gap: 6px; }
+
+        .btn-mini {
+            background: rgba(15, 0, 10, 0.8);
+            border: 1px solid var(--border-blood);
+            color: var(--text-secondary);
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.35rem 0.8rem;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: 0.25s;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: var(--font-display);
+        }
+
+        .btn-mini:hover {
+            background: rgba(30, 0, 15, 0.95);
+            border-color: var(--blood-bright);
+            color: var(--blood-bright);
+            box-shadow: 0 0 15px rgba(139, 0, 0, 0.3);
+        }
+
+        .btn-mini i { font-size: 0.6rem; }
+
+        .preview-frame-wrap {
+            flex: 1;
+            position: relative;
+            background: #0a0008;
+            min-height: 0;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+            display: block;
+            min-height: 360px;
+        }
+
+        /* ================================================================
+           PYTHON OUTPUT
+           ================================================================ */
+        .python-output-panel {
+            background: rgba(10, 0, 8, 0.8);
+            border: 1px solid var(--border-blood);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(8px);
+            display: none;
+        }
+
+        .python-output-panel.active { display: block; }
+
+        .python-output-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-family: var(--font-display);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .python-output-title i { color: var(--blood); }
+
+        .python-output {
+            width: 100%;
+            min-height: 100px;
+            background: rgba(5, 0, 5, 0.9);
+            border: 1px solid var(--border-blood);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+            outline: none;
+        }
+
+        .python-note {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ================================================================
+           STATUS BAR
+           ================================================================ */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 4px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-bar .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-bar i { color: var(--blood); font-size: 0.65rem; }
+
+        /* ================================================================
+           TOAST
+           ================================================================ */
+        .toast-message {
+            position: fixed;
+            bottom: 30px; right: 30px;
+            background: rgba(20, 0, 12, 0.95);
+            color: var(--ghost);
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(139, 0, 0, 0.3);
+            border: 1px solid var(--blood);
+            transform: translateY(90px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            pointer-events: none;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(12px);
+            letter-spacing: 1px;
+            font-family: var(--font-display);
+        }
+
+        .toast-message.show { transform: translateY(0); opacity: 1; }
+        .toast-message i { color: var(--blood-bright); font-size: 1.1rem; text-shadow: 0 0 12px var(--blood); }
+
+        /* ================================================================
+           FOOTER
+           ================================================================ */
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(139, 0, 0, 0.2);
+            padding-top: 1.8rem;
+            width: 100%;
+            letter-spacing: 1.5px;
+            font-family: var(--font-display);
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 50%;
+            transform: translateX(-50%);
+            width: 120px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--blood), transparent);
+            box-shadow: 0 0 15px var(--blood);
+        }
+
+        footer i { color: var(--blood-bright); margin: 0 4px; text-shadow: 0 0 10px var(--blood); }
+
+        /* ================================================================
+           GHOST DECORATION
+           ================================================================ */
+        .ghost-decoration {
+            position: fixed;
+            font-size: 8rem;
+            font-weight: 700;
+            letter-spacing: 15px;
+            text-transform: uppercase;
+            color: transparent;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            animation: ghostAppear 12s steps(1) infinite;
+            font-family: var(--font-display);
+            user-select: none;
+        }
+
+        .ghost-decoration.g1 { top: 30%; left: -5%; animation-delay: 3s; }
+        .ghost-decoration.g2 { bottom: 20%; right: -5%; animation-delay: 8s; }
+
+        @keyframes ghostAppear {
+            0%, 90%, 100% { opacity: 0; }
+            92% { opacity: 0.04; color: rgba(255,255,255,0.04); text-shadow: 0 0 30px rgba(139,0,0,0.3); }
+            94% { opacity: 0; }
+            96% { opacity: 0.02; color: rgba(255,255,255,0.02); }
+        }
+
+        /* ================================================================
+           RESPONSIVE
+           ================================================================ */
+        @media (max-width: 700px) {
+            .header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .logo h1 { font-size: 1.8rem; letter-spacing: 3px; }
+            .powered { font-size: 0.75rem; padding: 0.45rem 0.9rem; }
+            .nav-btn { font-size: 0.65rem; padding: 0.5rem 0.9rem; }
+            .page-hero h2 { letter-spacing: 3px; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .btn-tool { justify-content: center; width: 100%; }
+            .editor-layout { grid-template-columns: 1fr; min-height: unset; }
+            .editor-tab { font-size: 0.65rem; padding: 10px 8px; letter-spacing: 1px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+            html { scroll-behavior: auto; }
+            .twitch-text { animation: none; text-shadow: -2px 0 rgba(180,0,0,0.45), 2px 0 rgba(100,0,0,0.45), 0 0 24px rgba(139,0,0,0.5); }
+            .powered i { animation: none; }
+            .ghost-decoration { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Horror Background -->
+    <div class="horror-bg"><div class="grain"></div></div>
+    <div class="fog-orb red"></div>
+    <div class="fog-orb dark"></div>
+
+    <!-- Decorative ghost text -->
+    <div class="ghost-decoration g1">CODE</div>
+    <div class="ghost-decoration g2">RUN</div>
+
+    <div class="wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>Code Viewer</h1>
+                <span>live playground</span>
+            </div>
+            <div class="header-right">
+                <div class="powered">
+                    <i class="fas fa-bolt"></i>
+                    <span class="powered-text">powered by</span>
+                    <span class="twitch-text">Abdul Moez</span>
+                </div>
+                <a href="my-creations.html" class="nav-btn">
+                    <i class="fas fa-book-skull"></i> My Creations
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Hero -->
+        <div class="page-hero reveal">
+            <span class="eyebrow">⚰️ write. run. watch. ⚰️</span>
+            <h2>Live Code Playground</h2>
+            <p>Write HTML, CSS, JavaScript, and Python side-by-side. Run it instantly in the preview.</p>
+            <div class="free-badge">
+                <i class="fas fa-skull"></i> No login · No limits · Runs in your browser
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar reveal">
+            <span class="toolbar-label"><i class="fas fa-terminal"></i> Actions:</span>
+            <button class="btn-tool run" onclick="runAll()">
+                <i class="fas fa-play"></i> Run
+            </button>
+            <button class="btn-tool" onclick="runHtml()">
+                <i class="fas fa-code"></i> HTML + CSS + JS
+            </button>
+            <button class="btn-tool" onclick="runPython()">
+                <i class="fab fa-python"></i> Run Python
+            </button>
+            <button class="btn-tool" onclick="loadSample()">
+                <i class="fas fa-flask"></i> Load Sample
+            </button>
+            <button class="btn-tool" onclick="clearAll()">
+                <i class="fas fa-trash-alt"></i> Clear All
+            </button>
+            <button class="btn-tool" onclick="downloadCode()">
+                <i class="fas fa-download"></i> Download HTML
+            </button>
+            <button class="btn-tool" onclick="copyAll()">
+                <i class="fas fa-copy"></i> Copy All
+            </button>
+        </div>
+
+        <!-- Editor Layout -->
+        <div class="editor-layout reveal reveal-delay-1">
+            <!-- LEFT: Code Editors with Tabs -->
+            <div class="editor-panel">
+                <div class="editor-tabs" id="editorTabs">
+                    <button class="editor-tab active" data-lang="html" onclick="switchTab('html')">
+                        <i class="fab fa-html5"></i> HTML
+                    </button>
+                    <button class="editor-tab" data-lang="css" onclick="switchTab('css')">
+                        <i class="fab fa-css3-alt"></i> CSS
+                    </button>
+                    <button class="editor-tab" data-lang="js" onclick="switchTab('js')">
+                        <i class="fab fa-js"></i> JS
+                    </button>
+                    <button class="editor-tab" data-lang="python" onclick="switchTab('python')">
+                        <i class="fab fa-python"></i> Python
+                    </button>
+                </div>
+                <div class="editor-body">
+                    <textarea class="editor-textarea" id="htmlEditor" spellcheck="false" placeholder="<!-- Write your HTML here... -->"></textarea>
+                    <textarea class="editor-textarea" id="cssEditor" spellcheck="false" placeholder="/* Write your CSS here... */" style="display:none;"></textarea>
+                    <textarea class="editor-textarea" id="jsEditor" spellcheck="false" placeholder="// Write your JavaScript here..." style="display:none;"></textarea>
+                    <textarea class="editor-textarea" id="pythonEditor" spellcheck="false" placeholder="# Write your Python here... (runs via Pyodide - may take a few seconds to load first time)" style="display:none;"></textarea>
+                </div>
+                <div class="status-bar">
+                    <span class="status-item"><i class="fas fa-code"></i> <span id="lineCount">0</span> lines</span>
+                    <span class="status-item"><i class="fas fa-file-alt"></i> <span id="charCount">0</span> chars</span>
+                    <span class="status-item" id="langStatus"><i class="fas fa-check"></i> HTML mode</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Live Preview -->
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <div class="preview-title">
+                        <i class="fas fa-eye"></i> Live Preview
+                    </div>
+                    <div class="preview-actions">
+                        <button class="btn-mini" onclick="runHtml()">
+                            <i class="fas fa-play"></i> Refresh
+                        </button>
+                        <button class="btn-mini" onclick="openPreviewFullscreen()">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-frame-wrap">
+                    <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python Output -->
+        <div class="python-output-panel" id="pythonOutputPanel">
+            <div class="python-output-title">
+                <i class="fab fa-python"></i> Python Output
+            </div>
+            <textarea class="python-output" id="pythonOutput" readonly placeholder="Python output will appear here..."></textarea>
+            <div class="python-note">
+                <i class="fas fa-info-circle"></i> Python runs via Pyodide (WebAssembly). First run downloads ~10MB, then it's cached. Limited to browser-compatible Python.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="reveal">
+            <i class="fas fa-shield-alt"></i> Code Viewer — live playground
+            <i class="fas fa-circle" style="font-size: 0.3rem; vertical-align: middle; color: var(--blood);"></i>
+            powered by <span class="twitch-text" style="font-size: 0.85rem;">Abdul Moez</span>
+        </footer>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-message" id="toast">
+        <i class="fas fa-skull"></i>
+        <span id="toastText">Done!</span>
+    </div>
+
+    <script>
+        // ================================================================
+        // TOAST
+        // ================================================================
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toastText');
+        let toastTimer = null;
+
+        function showToast(msg) {
+            toastText.textContent = msg;
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        // ================================================================
+        // EDITOR TAB SWITCHING
+        // ================================================================
+        const editors = {
+            html: document.getElementById('htmlEditor'),
+            css: document.getElementById('cssEditor'),
+            js: document.getElementById('jsEditor'),
+            python: document.getElementById('pythonEditor'),
+        };
+        const langStatus = document.getElementById('langStatus');
+        let currentLang = 'html';
+
+        function switchTab(lang) {
+            currentLang = lang;
+            Object.keys(editors).forEach(k => {
+                editors[k].style.display = k === lang ? 'block' : 'none';
+            });
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.lang === lang);
+            });
+            const labels = {
+                html: '<i class="fab fa-html5"></i> HTML mode',
+                css: '<i class="fab fa-css3-alt"></i> CSS mode',
+                js: '<i class="fab fa-js"></i> JavaScript mode',
+                python: '<i class="fab fa-python"></i> Python mode',
+            };
+            langStatus.innerHTML = labels[lang];
+            updateStats();
+        }
+
+        // ================================================================
+        // STATS
+        // ================================================================
+        function updateStats() {
+            const val = editors[currentLang].value;
+            const lines = val ? val.split('\n').length : 0;
+            document.getElementById('lineCount').textContent = lines;
+            document.getElementById('charCount').textContent = val.length;
+        }
+
+        Object.values(editors).forEach(ed => {
+            ed.addEventListener('input', updateStats);
+            // Tab key inserts spaces
+            ed.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = ed.selectionStart;
+                    const end = ed.selectionEnd;
+                    ed.value = ed.value.substring(0, start) + '  ' + ed.value.substring(end);
+                    ed.selectionStart = ed.selectionEnd = start + 2;
+                    updateStats();
+                }
+            });
+        });
+
+        // ================================================================
+        // RUN HTML + CSS + JS IN PREVIEW IFRAME
+        // ================================================================
+        function runHtml() {
+            const html = editors.html.value;
+            const css = editors.css.value;
+            const js = editors.js.value;
+
+            const doc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>
+try {
+${js}
+} catch (e) {
+    document.body.innerHTML += '<pre style="color:red;background:#ffebee;padding:10px;border-radius:8px;margin-top:20px;">JS Error: ' + e.message + '</pre>';
+    console.error(e);
+}
+<\/script>
+</body>
+</html>`;
+
+            const frame = document.getElementById('previewFrame');
+            frame.srcdoc = doc;
+            showToast('▶ HTML + CSS + JS running');
+        }
+
+        // ================================================================
+        // PYODIDE (Python in browser)
+        // ================================================================
+        let pyodideReady = false;
+        let pyodide = null;
+        const pythonOutput = document.getElementById('pythonOutput');
+        const pythonOutputPanel = document.getElementById('pythonOutputPanel');
+
+        async function loadPyodideAndRun() {
+            if (!pyodideReady) {
+                pythonOutput.value = '⏳ Loading Pyodide (first time can take ~10s)...\n';
+                try {
+                    // Load Pyodide from CDN
+                    if (typeof loadPyodide === 'undefined') {
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+                            script.onload = resolve;
+                            script.onerror = reject;
+                            document.head.appendChild(script);
+                        });
+                    }
+                    pyodide = await loadPyodide({
+                        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/',
+                    });
+                    pyodideReady = true;
+                    pythonOutput.value += '✅ Pyodide ready!\n\n';
+                } catch (err) {
+                    pythonOutput.value = '❌ Failed to load Pyodide: ' + err.message + '\n\nPython support requires internet and WebAssembly.';
+                    return;
+                }
+            }
+            await runPythonCode();
+        }
+
+        async function runPythonCode() {
+            const code = editors.python.value;
+            if (!code.trim()) {
+                pythonOutput.value = '⚠️ No Python code to run.';
+                return;
+            }
+
+            pythonOutput.value = '▶ Running Python...\n\n';
+            try {
+                // Capture stdout
+                await pyodide.runPythonAsync(`
+import sys
+import io
+sys.stdout = io.StringIO()
+`);
+                const result = await pyodide.runPythonAsync(code);
+                const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
+                await pyodide.runPythonAsync(`
+sys.stdout = sys.__stdout__
+`);
+
+                let output = '';
+                if (stdout) output += stdout;
+                if (result !== undefined) output += (output ? '\n' : '') + 'Return value: ' + String(result);
+                if (!output) output = '(no output)';
+                pythonOutput.value += output;
+                showToast('🐍 Python executed');
+            } catch (err) {
+                pythonOutput.value += '❌ Error:\n' + err.message;
+                showToast('⚠ Python error');
+            }
+        }
+
+        function runPython() {
+            pythonOutputPanel.classList.add('active');
+            pythonOutputPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            loadPyodideAndRun();
+        }
+
+        // ================================================================
+        // RUN ALL
+        // ================================================================
+        function runAll() {
+            runHtml();
+            if (editors.python.value.trim()) {
+                runPython();
+            }
+        }
+
+        // ================================================================
+        // SAMPLE CODE
+        // ================================================================
+        function loadSample() {
+            editors.html.value = `<div class="card">
+  <h1>Hello, World! 🩸</h1>
+  <p>This is a sample card inside the Code Viewer.</p>
+  <button onclick="sayHi()">Click me</button>
+  <p id="output"></p>
+</div>`;
+
+            editors.css.value = `* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0008, #1a0000);
+  font-family: Georgia, serif;
+  color: #e8d5d5;
+  padding: 20px;
+}
+.card {
+  background: rgba(20, 0, 12, 0.9);
+  border: 1px solid #8b0000;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 0 40px rgba(139, 0, 0, 0.4);
+}
+h1 {
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: #e8d5d5;
+  text-shadow: 0 0 20px #8b0000;
+  margin-bottom: 16px;
+}
+p {
+  color: #a08080;
+  margin-bottom: 20px;
+  line-height: 1.7;
+  font-style: italic;
+}
+button {
+  background: linear-gradient(135deg, #8b0000, #dc2626);
+  border: none;
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  box-shadow: 0 0 25px rgba(139, 0, 0, 0.5);
+  transition: 0.3s;
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(220, 38, 38, 0.7);
+}
+#output {
+  margin-top: 20px;
+  color: #dc2626;
+  font-weight: bold;
+  font-size: 1.1rem;
+  min-height: 20px;
+}`;
+
+            editors.js.value = `function sayHi() {
+  const out = document.getElementById('output');
+  out.textContent = '💀 Hello from JavaScript!';
+  out.style.textShadow = '0 0 20px #dc2626';
+  console.log('Greeting displayed');
+}`;
+
+            editors.python.value = `# Sample Python code
+print("💀 Hello from Python!")
+print("2 + 2 =", 2 + 2)
+
+# Simple loop
+for i in range(3):
+    print(f"Count: {i}")
+
+# Function
+def greet(name):
+    return f"Greetings, {name}!"
+
+print(greet("Abdul Moez"))`;
+
+            switchTab('html');
+            updateStats();
+            showToast('📜 Sample loaded');
+        }
+
+        // ================================================================
+        // CLEAR ALL
+        // ================================================================
+        function clearAll() {
+            if (!confirm('Clear all editors and preview?')) return;
+            Object.values(editors).forEach(e => e.value = '');
+            document.getElementById('previewFrame').srcdoc = '';
+            pythonOutput.value = '';
+            pythonOutputPanel.classList.remove('active');
+            updateStats();
+            showToast('🧹 Cleared');
+        }
+
+        // ================================================================
+        // DOWNLOAD
+        // ================================================================
+        function downloadCode() {
+            const html = editors.html.value;
+            const css = editors.css.value;
+            const js = editors.js.value;
+
+            const doc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>
+${js}
+<\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([doc], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code-viewer-export.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('⬇ HTML downloaded');
+        }
+
+        // ================================================================
+        // COPY ALL
+        // ================================================================
+        async function copyAll() {
+            const text = `=== HTML ===\n${editors.html.value}\n\n=== CSS ===\n${editors.css.value}\n\n=== JS ===\n${editors.js.value}\n\n=== Python ===\n${editors.python.value}`;
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('📋 All code copied');
+            } catch (err) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('📋 All code copied');
+            }
+        }
+
+        // ================================================================
+        // FULLSCREEN PREVIEW
+        // ================================================================
+        function openPreviewFullscreen() {
+            const frame = document.getElementById('previewFrame');
+            if (frame.requestFullscreen) {
+                frame.requestFullscreen();
+            } else if (frame.webkitRequestFullscreen) {
+                frame.webkitRequestFullscreen();
+            } else if (frame.mozRequestFullScreen) {
+                frame.mozRequestFullScreen();
+            } else {
+                showToast('⚠ Fullscreen not supported');
+            }
+        }
+
+        // ================================================================
+        // SCROLL REVEAL
+        // ================================================================
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+        function observeAllReveals() {
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // ================================================================
+        // PARALLAX FOG
+        // ================================================================
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const scrolled = window.pageYOffset;
+                    document.querySelectorAll('.fog-orb').forEach((orb, i) => {
+                        orb.style.transform = `translateY(${scrolled * (i + 1) * 0.05}px)`;
+                    });
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        // ================================================================
+        // KEYBOARD SHORTCUTS
+        // ================================================================
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter = Run HTML
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runAll();
+            }
+            // Ctrl+S = Download
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadCode();
+            }
+            // Ctrl+Shift+P = Run Python
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                runPython();
+            }
+        });
+
+        // ================================================================
+        // INIT
+        // ================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            observeAllReveals();
+            updateStats();
+            // Auto-load sample on first visit
+            if (!editors.html.value && !editors.css.value && !editors.js.value) {
+                loadSample();
+            }
+        });
+    </script>
+</body>
+</html>
